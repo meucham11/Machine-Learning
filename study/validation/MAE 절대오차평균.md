@@ -15,6 +15,7 @@ mean absolute error
 
 ```python3
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
 
 # split data into training and validation data, for both features and target
 # The split is based on a random number generator. Supplying a numeric value to
