@@ -4,6 +4,13 @@ mean absolute error
 절대 오차의 평균
 ```
 ![mae](https://user-images.githubusercontent.com/34879309/73507688-1a0cac80-441d-11ea-8cf7-0c0cc8e371b7.gif)
+```
+방향을 고려하지 않고 일련의 예측에서 오류의 평균 크기를 측정한다.
+오차 계산시 양수 및 음수 오류가 취소되므로 주의해야한다.
+
+```
+
+
 ```python3
 from sklearn.model_selection import train_test_split
 
@@ -21,3 +28,4 @@ melbourne_model.fit(train_X, train_y)
 val_predictions = melbourne_model.predict(val_X)
 print(mean_absolute_error(val_y, val_predictions))
 ```
+
