@@ -2,20 +2,7 @@
 ```
 mean absolute error
 절대 오차의 평균
-
-MAE를 계산하려면 먼저 모델이 필요하다.
 ```
-```python3
-from sklearn.metrics import mean_absolute_error
-
-predicted_home_prices = melbourne_model.predict(X)
-mean_absolute_error(y, predicted_home_prices)
-```
-이렇게 했을 때는 전체 데이터를 넣어버렸기 때문에 전체에 대한 패턴을 모두 반영한다.
-만약 녹색 문의 집 값이 높았다면 녹색문이 있는 집값은 비싸게 예측하겠지만
-녹색문이 아니여도 비싼 집이라면 부정확한 예측 대상이 되는 것이다.
-
-그렇기 때문에 데이터를 train과 test로 나눈다.
 
 ```python3
 from sklearn.model_selection import train_test_split
