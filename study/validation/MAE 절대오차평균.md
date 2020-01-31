@@ -3,7 +3,7 @@
 mean absolute error
 절대 오차의 평균
 ```
-
+![mae](https://user-images.githubusercontent.com/34879309/73507688-1a0cac80-441d-11ea-8cf7-0c0cc8e371b7.gif)
 ```python3
 from sklearn.model_selection import train_test_split
 
