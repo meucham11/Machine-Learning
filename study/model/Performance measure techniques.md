@@ -51,13 +51,17 @@ from sklearn.model_selection import cross_validation
 # Check variation of cross validation
 ### lasso scores /  ridge scores
 <img width="247" alt="캡처" src="https://user-images.githubusercontent.com/34879309/73716040-472cc800-4759-11ea-8aad-2ab656a70534.PNG">
+
 ```
 ridge 모델이 데이터에 더 민감하게 만들어진다.(분포가 넓기 때문에)
 이 그림에서는 최대 모델은 릿지가 좋지만
 안정성으로 보았을 때는 라쏘가 더 낫다는 평
 ```
+
 ---
+
 # Validation set for parameter tuning
+
 ```
  - Validation set의 많은 이유중 하나가 Hyper parameter tuning이다.
  - Number of iterations(SGD), Number of branch(Tree-based) 등등
