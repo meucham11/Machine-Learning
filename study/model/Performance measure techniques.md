@@ -65,3 +65,9 @@ ridge 모델이 데이터에 더 민감하게 만들어진다.(분포가 넓기 
  - Validation set 결과와 Training set 겨ㄹ과의 차이가 벌어지면 overfitting
 ```
 
+# 그 외..
+'- StratifiedKFold : Y 값 비율에 따라 뽑음'
+- RepatedKFold : 중복이 포함된 K-Fold생성
+- Leave POut : gksqnsdp P개를 뽑음
+- ShuffleSplit : 독립적인(중복되는) 데이터 Sampling
+- GroupKFold : 그룹별로 데이터를 sampling
