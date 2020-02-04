@@ -34,3 +34,34 @@ Tr   V  Tst
 - 모델의 Parameter 튜닝, 간단한 모델의 최종 성능 측정 등 사용
 ```
 ![image](https://user-images.githubusercontent.com/34879309/73653536-b5777900-46cc-11ea-8812-447a84294eb6.png)
+```
+from sklearn.model_selection import cross_validation
+에서 scores를 뽑았을 때 scoring = 'neg_mean_squared_error'를 입력함으로써 -값이 붙어서 나온다.
+이는 scikit learn의 정책, 즉, rmse나 mse는 작아야 좋은데 score값은 높으면 좋으므로 헷갈리지 않게 모든 지표값을 작아야 좋다는 것으로 통일하기 위함이다.
+
+```
+
+## Leave One Out (LOO)
+```
+ - 거의 잘 안쓰는 기법이다.
+ - =simple cross validation으로 불리며 한번에 한 개의 데이터만 Test Set으로 사용한다 -> 총 k번의 iteration
+ - 파라메타가 없다.
+```
+---
+# Check variation of cross validation
+### lasso scores /  ridge scores
+<img width="247" alt="캡처" src="https://user-images.githubusercontent.com/34879309/73716040-472cc800-4759-11ea-8aad-2ab656a70534.PNG">
+```
+ridge 모델이 데이터에 더 민감하게 만들어진다.(분포가 넓기 때문에)
+이 그림에서는 최대 모델은 릿지가 좋지만
+안정성으로 보았을 때는 라쏘가 더 낫다는 평
+```
+---
+# Validation set for parameter tuning
+```
+ - Validation set의 많은 이유중 하나가 Hyper parameter tuning이다.
+ - Number of iterations(SGD), Number of branch(Tree-based) 등등
+ - Validation set의 성능으로 최적의 parameter를 찾음
+ - Validation set 결과와 Training set 겨ㄹ과의 차이가 벌어지면 overfitting
+```
+
