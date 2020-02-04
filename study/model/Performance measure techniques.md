@@ -66,7 +66,7 @@ ridge 모델이 데이터에 더 민감하게 만들어진다.(분포가 넓기 
 ```
 
 # 그 외..
-'- StratifiedKFold : Y 값 비율에 따라 뽑음'
+- StratifiedKFold : Y 값 비율에 따라 뽑음
 - RepatedKFold : 중복이 포함된 K-Fold생성
 - Leave POut : gksqnsdp P개를 뽑음
 - ShuffleSplit : 독립적인(중복되는) 데이터 Sampling
