@@ -13,4 +13,6 @@ conda create -n 원하는이름 python=3.7     --> 원래 python 3.7.4 사용중
 conda activate 위에입력한이름        --> 가상환경 활성화
 conda install python=3.6.5          --> 원하는 파이썬 버전 설치
 pip install tensorflow     --> 원하는 버전을 깔아주자  3.6이라 2가 깔려도 잘될것이다.
+conda deactivate           --> 현재 가상환경 종료. 원래 환경으로 돌아가 파이썬 3.7.4가 실행될 것이다.
+
 ```
