@@ -73,11 +73,11 @@ x_train, x_test, y_train, y_test = train_test_split(train_x,train_y, random_stat
 
 
 param_grid = {
-    'max_depth': [3, 4, 5],
-    'learning_rate': [0.1, 0.01, 0.05],
-    'gamma': [0, 0.25, 1.0],
-    'reg_lambda': [0, 1.0, 10.0],
-    'scale_pos_weight': [1, 3, 5] # NOTE: XGBoost recommends sum(negative instances) / sum(positive instances)
+    'max_depth': [2,3, 4],
+    'learning_rate': [0.5,0.25,0.1,0.05,0.01],
+    'gamma': [0,0.2, 0.25,0.3, 0.5],
+    'reg_lambda': [1,5,10,12],
+    'scale_pos_weight': [1.5, 3, 4] # NOTE: XGBoost recommends sum(negative instances) / sum(positive instances)
 }
 optimal_params = GridSearchCV(
     estimator=xgb.XGBClassifier(objective='binary:logistic', 
@@ -90,7 +90,7 @@ optimal_params = GridSearchCV(
     scoring='roc_auc', ## see https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
     verbose=0, # NOTE: If you want to see what Grid Search is doing, set verbose=2
     n_jobs = 10,
-    cv = 3
+    cv = 10
 )
 
 optimal_params.fit(x_train, 
@@ -100,7 +100,7 @@ optimal_params.fit(x_train,
                    eval_set=[(x_test, y_test)],
                    verbose=False)
 print(optimal_params.best_params_)
-optimal_params.best_params_['gamma']
+
 
 # Evaluate Optimized Model
 clf_xgb = xgb.XGBClassifier(seed=42,
@@ -138,6 +138,8 @@ accuracy
 preds = clf_xgb.predict(test_x)
 preds
 prob=clf_xgb.predict_proba(test_x)
+
+
 
 ## csv 생성
 
