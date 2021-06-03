@@ -1,4 +1,4 @@
-'''python3
+```python3
 # https://www.kaggle.com/lifesailor/xgboost
 
 
@@ -233,4 +233,4 @@ list(zip(*prob))[1]
 submit_csv = pd.DataFrame({'custid':test_x_raw['cust_id'],
                            'gender':list(zip(*prob))[1]})
 submit_csv.to_csv('D:\\jupyter lab\\빅분기\\작업2유형/submit_csv',encoding='cp949')
-'''
+```
