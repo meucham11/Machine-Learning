@@ -128,7 +128,7 @@ preds = clf_xgb.predict(x_test)
 
 prob=clf_xgb.predict_proba(x_test)
 prob
-accuracy = (preds.flatten() == np.array(y_test)).flatten().sum().astype(float) / len(preds)*100
+accuracy = (preds.flatten() == np.array(y_test).flatten()).sum().astype(float) / len(preds)*100
 accuracy
 
 
