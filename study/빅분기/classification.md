@@ -1,19 +1,5 @@
 
 ```python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun  3 13:08:14 2021
-
-@author: User
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun  3 09:30:37 2021
-
-@author: User
-"""
-
 import pandas as pd
 import numpy as np
 
@@ -76,15 +62,14 @@ test_x['환불금액']=test_x['환불금액'].fillna(0)
 ## xgboost에서는 scaling을 하지 않아도 큰 성능 차이가 없으므로 패스
 
 ## 더미화
-# train_x = pd.get_dummies(train_x,columns=['주구매상품','주구매지점'])
-# test_x = pd.get_dummies(test_x,columns=['주구매상품','주구매지점'])
-
+train_x = pd.get_dummies(train_x,columns=['주구매상품','주구매지점'])
+test_x = pd.get_dummies(test_x,columns=['주구매상품','주구매지점'])
+# 여기서 문제 발생 train 더미화와 test 더미화했을 때 컬럼명이 매칭되지 않는것이 있다.
+list(set(train_x)-set(test_x))
+del train_x[list(set(train_x)-set(test_x))[0]]
 
 ############################### split  train 데이터를 다시 train과 test로 나눈다.
 x_train, x_test, y_train, y_test = train_test_split(train_x,train_y, random_state=1)
-
-
-
 
 
 param_grid = {
@@ -98,7 +83,9 @@ optimal_params = GridSearchCV(
     estimator=xgb.XGBClassifier(objective='binary:logistic', 
                                 seed=42,
                                 subsample=0.9,
-                                colsample_bytree=0.5),
+                                colsample_bytree=0.5,
+                                use_label_encoder=False),
+    
     param_grid=param_grid,
     scoring='roc_auc', ## see https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
     verbose=0, # NOTE: If you want to see what Grid Search is doing, set verbose=2
@@ -124,7 +111,8 @@ clf_xgb = xgb.XGBClassifier(seed=42,
                         learning_rate=optimal_params.best_params_['learning_rate'],
                         gamma=optimal_params.best_params_['gamma'],                        
                         reg_lambda=optimal_params.best_params_['reg_lambda'],
-                        scale_pos_weight=optimal_params.best_params_['scale_pos_weight']
+                        scale_pos_weight=optimal_params.best_params_['scale_pos_weight'],
+                        use_label_encoder=False
                         )
 clf_xgb.fit(x_train, 
             y_train, 
@@ -140,7 +128,7 @@ preds = clf_xgb.predict(x_test)
 
 prob=clf_xgb.predict_proba(x_test)
 prob
-accuracy = (preds.flatten() == np.array(y_test).flatten()).sum().astype(float) / len(preds)*100
+accuracy = (preds.flatten() == np.array(y_test)).flatten().sum().astype(float) / len(preds)*100
 accuracy
 
 
@@ -148,10 +136,14 @@ accuracy
 ####################################################################################################
 # test 데이터 대입
 preds = clf_xgb.predict(test_x)
+preds
+prob=clf_xgb.predict_proba(test_x)
 
 ## csv 생성
-result = pd.DataFrame({'custid':list(zip(*prob))[0]
-                       'gender':list(zip(*prob))[1]})
-list(zip(*prob))[0]
+
 list(zip(*prob))[1]
+
+submit_csv = pd.DataFrame({'custid':test_x_raw['cust_id'],
+                           'gender':list(zip(*prob))[1]})
+submit_csv.to_csv('D:\\jupyter lab\\빅분기\\작업2유형/submit_csv',encoding='cp949')
 '''
