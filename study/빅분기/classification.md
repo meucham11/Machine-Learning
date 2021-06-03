@@ -1,4 +1,4 @@
-python3```
+python3'''
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jun  3 13:08:14 2021
@@ -153,4 +153,4 @@ result = pd.DataFrame({'custid':list(zip(*prob))[0]
                        'gender':list(zip(*prob))[1]})
 list(zip(*prob))[0]
 list(zip(*prob))[1]
-```
+'''
