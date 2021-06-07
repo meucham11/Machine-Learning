@@ -90,7 +90,6 @@ optimal_params = GridSearchCV(
                                 use_label_encoder=False
                                 ),
         param_grid=param_grid,
-        scoring='accuracy',
         n_jobs=-1,
         iid=False,
         cv=5,
@@ -111,13 +110,13 @@ print(optimal_params.best_params_)
 
 print("time :", time.time() - start)  # 현재시각 - 시작시간 = 실행 시
 # Evaluate Optimized Model
-clf_xgb = xgb.XGBClassifier(learning_rate=1000,
-                            n_estimators=1000,
+clf_xgb = xgb.XGBClassifier(learning_rate=0.01,
+                            n_estimators=10,
                             objective='binary:logistic',   # 다중분류 multi:softmax   다중확률 multi-softprob
                             scoring ='roc_auc',
                             thread=-1,
                             use_label_encoder=False,
-                            
+                            random_state=50,
                             max_depth=optimal_params.best_params_['max_depth'],
                             min_child_weight=optimal_params.best_params_['min_child_weight'],
                             gamma=optimal_params.best_params_['gamma'],
@@ -135,7 +134,7 @@ clf_xgb.fit(x_train,
             y_train, 
             verbose=True, 
             early_stopping_rounds=10,
-            eval_metric='aucpr',
+            eval_metric='auc',
             eval_set=[(x_test, y_test)])
 
 
@@ -218,13 +217,6 @@ clf_xgb.fit(x_train,
             eval_set=[(x_test, y_test)])
 
 
-
-
-
-
-
-
-
 ####################################################################################################
 # train 모델 평가
 preds = clf_xgb.predict(x_test)
@@ -248,5 +240,4 @@ list(zip(*prob))[1]
 submit_csv = pd.DataFrame({'custid':test_x_raw['cust_id'],
                            'gender':list(zip(*prob))[1]})
 submit_csv.to_csv('D:\\jupyter lab\\빅분기\\작업2유형/submit_csv',encoding='cp949')
-
 ```
