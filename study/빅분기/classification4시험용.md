@@ -152,7 +152,7 @@ not_imtc=np.where(clf_xgb.feature_importances_!=0)[0]
 
 x_train=x_train.iloc[:,not_imtc]
 x_test=x_test.iloc[:,not_imtc]
-
+test_x=test_x.iloc[:,not_imtc]
 
 # 다시 학습
 
@@ -217,6 +217,13 @@ clf_xgb.fit(x_train,
             eval_set=[(x_test, y_test)])
 
 
+
+
+
+
+
+
+
 ####################################################################################################
 # train 모델 평가
 preds = clf_xgb.predict(x_test)
@@ -233,7 +240,7 @@ prob=clf_xgb.predict_proba(test_x)
 
 
 
-## csv 생성  62.742
+## csv 생성 
 
 list(zip(*prob))[1]
 
