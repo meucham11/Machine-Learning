@@ -225,14 +225,6 @@ clf_xgb.fit(x_train,
 
 
 ####################################################################################################
-# train 모델 평가
-preds = clf_xgb.predict(x_test)
-
-prob=clf_xgb.predict_proba(x_test)
-prob
-accuracy = (preds.flatten() == np.array(y_test).flatten()).sum().astype(float) / len(preds)*100
-accuracy
-
 # test 데이터 대입
 preds = clf_xgb.predict(test_x)
 preds
