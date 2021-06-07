@@ -213,7 +213,7 @@ clf_xgb.fit(x_train,
             y_train, 
             verbose=True, 
             early_stopping_rounds=10,
-            eval_metric='aucpr',
+            eval_metric='auc',
             eval_set=[(x_test, y_test)])
 
 
