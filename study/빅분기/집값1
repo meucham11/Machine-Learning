@@ -1,0 +1,451 @@
+```python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun  8 13:49:58 2021
+
+@author: User
+"""
+
+import pandas as pd
+import numpy as np
+import xgboost as xgb
+from sklearn.model_selection import GridSearchCV, train_test_split
+
+# data load
+train_raw = pd.read_csv('C:\\Users\\User\\Downloads\\house_train.csv',encoding='cp949')
+test_raw = pd.read_csv('C:\\Users\\User\\Downloads\\house_test.csv',encoding='cp949')
+
+# data 살피기
+train_raw.info()
+train_raw.shape
+train_raw['MSZoning'].value_counts()
+train_raw['KitchenQual'].value_counts()
+train_raw['Alley'].isnull().sum()
+train_raw.isnull().sum()
+
+
+train_x=train_raw.copy().drop(['Alley','PoolQC','Fence','MiscFeature'],axis=1)
+test_x=test_raw.copy().drop(['Alley','PoolQC','Fence','MiscFeature'],axis=1)
+
+train_x.select_dtypes(include=['object'])
+
+
+for column in train_x.select_dtypes(include=['object']):
+    mode = train_x[column].mode()
+    train_x[column]=train_x[column].fillna(mode)
+
+for column in test_x.select_dtypes(include=['object']):
+    mode = test_x[column].mode()
+    test_x[column]=test_x[column].fillna(mode)
+
+
+for column in train_x.select_dtypes(include=['int','float']):
+    mean = train_x[column].mean()
+    train_x[column]=train_x[column].fillna(mean)
+    
+
+for column in test_x.select_dtypes(include=['int','float']):
+    mean = test_x[column].mean()
+    test_x[column]=test_x[column].fillna(mean)
+
+
+del train_x['Id']
+del test_x['Id']
+
+train_y=train_x['SalePrice']
+del train_x['SalePrice']
+
+train_x = pd.get_dummies(train_x)
+test_x = pd.get_dummies(test_x)
+train_x=train_x.drop(list(set(train_x)-set(test_x)),axis=1)
+
+
+x_train, x_test, y_train, y_test = train_test_split(train_x,train_y,random_state=1)
+
+
+
+param_grid = {
+    'max_depth':[3,4,5],
+    'min_child_weight':[1,3,5],
+    'gamma':[0,0.2,0.4],
+    'subsample':[0.5,0.7,0.9],
+    'colsample_bytree':[0.5,0.7,0.9],
+    'reg_alpha':[0.01,0.1,1,10,100]
+}
+
+
+optimal_params = GridSearchCV(
+    estimator=xgb.XGBRegressor(learning_rate=1000,
+                                n_estimators=1000,
+                                objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                                thread=-1,
+                                scoring ='rmse',
+                                use_label_encoder=False
+                                ),
+        param_grid=param_grid,
+        n_jobs=-1,
+        iid=False,
+        cv=5,
+        verbose=10
+)
+
+
+optimal_params.fit(x_train, 
+                   y_train, 
+                   early_stopping_rounds=10,                
+                   eval_metric='rmse',
+                   eval_set=[(x_test, y_test)],
+                   verbose=False)
+print(optimal_params.best_params_)
+
+
+# Evaluate Optimized Model
+reg_xgb = xgb.XGBRegressor(learning_rate=0.01,
+                            n_estimators=10,
+                            objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                            scoring ='rmse',
+                            thread=-1,
+                            use_label_encoder=False,
+                            random_state=50,
+                            max_depth=optimal_params.best_params_['max_depth'],
+                            min_child_weight=optimal_params.best_params_['min_child_weight'],
+                            gamma=optimal_params.best_params_['gamma'],
+                            subsample=optimal_params.best_params_['subsample'],
+                            colsample_bytree=optimal_params.best_params_['colsample_bytree'],
+                            reg_alpha=optimal_params.best_params_['reg_alpha']
+                            )
+
+
+
+
+
+
+reg_xgb.fit(x_train, 
+            y_train, 
+            verbose=True, 
+            early_stopping_rounds=10,
+            eval_metric='rmse',
+            eval_set=[(x_test, y_test)])
+
+
+reg_xgb.feature_importances_
+imtc=np.where(reg_xgb.feature_importances_!=0)[0]
+
+x_train = x_train.iloc[:,imtc]
+x_test = x_test.iloc[:,imtc]
+test_x = test_x.iloc[:,imtc]
+
+
+
+
+param_grid = {
+    'max_depth':[3,4,5],
+    'min_child_weight':[1,3,5],
+    'gamma':[0,0.2,0.4],
+    'subsample':[0.5,0.7,0.9],
+    'colsample_bytree':[0.5,0.7,0.9],
+    'reg_alpha':[0.01,0.1,1,10,100]
+}
+
+
+optimal_params = GridSearchCV(
+    estimator=xgb.XGBRegressor(learning_rate=1000,
+                                n_estimators=1000,
+                                objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                                thread=-1,
+                                scoring ='rmse',
+                                use_label_encoder=False
+                                ),
+        param_grid=param_grid,
+        n_jobs=-1,
+        iid=False,
+        cv=5,
+        verbose=10
+)
+
+
+optimal_params.fit(x_train, 
+                   y_train, 
+                   early_stopping_rounds=10,                
+                   eval_metric='rmse',
+                   eval_set=[(x_test, y_test)],
+                   verbose=False)
+print(optimal_params.best_params_)
+
+
+# Evaluate Optimized Model
+reg_xgb = xgb.XGBRegressor(learning_rate=0.01,
+                            n_estimators=10,
+                            objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                            scoring ='rmse',
+                            thread=-1,
+                            use_label_encoder=False,
+                            random_state=50,
+                            max_depth=optimal_params.best_params_['max_depth'],
+                            min_child_weight=optimal_params.best_params_['min_child_weight'],
+                            gamma=optimal_params.best_params_['gamma'],
+                            subsample=optimal_params.best_params_['subsample'],
+                            colsample_bytree=optimal_params.best_params_['colsample_bytree'],
+                            reg_alpha=optimal_params.best_params_['reg_alpha']
+                            )
+
+reg_xgb.fit(x_train, 
+                   y_train, 
+                   early_stopping_rounds=10,                
+                   eval_metric='rmse',
+                   eval_set=[(x_test, y_test)],
+                   verbose=False)
+preds = reg_xgb.predict(test_x)
+preds
+
+
+submit = pd.read_csv('C:\\Users\\User\\Downloads\\sample_submission.csv',encoding='cp949')
+submit['SalePrice']=preds
+submit.to_csv('C:\\Users\\User\\Downloads\\house_result.csv',encoding='cp949',index=False)
+
+
+
+
+
+#################################################################################
+#################################################################################
+train=pd.read_csv('C:\\Users\\User\\Downloads\\house_train.csv')
+test=pd.read_csv('C:\\Users\\User\\Downloads\\house_test.csv')
+
+#마지막, 제출할 때, test에 있는 Id 꺼내오기 위한 csv파일 저장
+o_test = pd.read_csv('C:\\Users\\User\\Downloads\\house_test.csv')
+
+#target variable
+#train['SalePrice'] = np.log1p(train['SalePrice'])
+target = train['SalePrice']
+train = train.drop('SalePrice',axis=1)
+
+# train data 전처리
+train.drop(['Id','Utilities','MSSubClass'],axis=1,inplace=True)
+
+for col in ('MiscFeature','Alley','Fence','FireplaceQu','GarageType','GarageFinish','GarageQual','GarageCond','BsmtQual','BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinType2','MasVnrType'):
+    train[col] = train[col].fillna('None')
+for col in ('PoolQC','GarageYrBlt','GarageArea','GarageCars','BsmtFinSF1','BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','BsmtFullBath','BsmtHalfBath','MasVnrArea'):
+    train[col] = train[col].fillna(0)
+train["LotFrontage"] = train.groupby("Neighborhood")["LotFrontage"].transform(
+    lambda x: x.fillna(x.median()))
+for col in ('MSZoning','Electrical','KitchenQual','Exterior1st','Exterior2nd','SaleType'):
+    train[col] =train[col].fillna(train[col].mode()[0])
+train["Functional"] = train["Functional"].fillna("Typ")
+train['YrSold'] = train['YrSold'].astype(str)
+train['MoSold'] = train['MoSold'].astype(str)
+
+train = train.replace({'FireplaceQu': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'BsmtQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'BsmtCond': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'GarageQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'GarageCond': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'ExterQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'ExterCond': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'HeatingQC': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'PoolQC': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'PavedDrive': {'Y': 2, 'P': 1, 'N': 0}, \
+                 'KitchenQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'BsmtFinType1': {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3, 'LwQ': 2, 'Unf': 1, 'None': 0}, \
+                 'BsmtFinType2': {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3, 'LwQ': 2, 'Unf': 1, 'None': 0}, \
+                 'Functional': {'Sel': 6, 'Sev': 5, 'Maj2': 4, 'Maj1': 3, 'Mod': 2, 'Min1': 1, 'Min2': 1, 'Typ': 0}, \
+                 'BsmtExposure': {'Gd': 3, 'Av': 2, 'Mn': 1, 'No': 0, 'None': 0}, \
+                 'Fence': {'GdPrv': 2, 'GdWo': 2, 'MnPrv': 1, 'MnWw': 1, 'None': 0}, \
+                 'GarageFinish': {'Fin': 3, 'Unf': 2, 'RFn': 1, 'None': 0}, \
+                 'LandSlope': {'Gtl': 2, 'Mod': 1, 'Sev': 0}, \
+                 'LotShape': {'Reg': 3, 'IR1': 2, 'IR2': 1, 'IR3': 0}, \
+                
+                 'Street': {'Pave': 1, 'Grvl': 0}, \
+                 'Alley': {'Pave': 2, 'Grvl': 1, 'None': 0}})
+
+#test data 전처리
+test.drop(['Id','Utilities','MSSubClass'],axis=1,inplace=True)
+
+for col in ('MiscFeature','Alley','Fence','FireplaceQu','GarageType','GarageFinish','GarageQual','GarageCond','BsmtQual','BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinType2','MasVnrType'):
+    test[col] = test[col].fillna('None')
+for col in ('PoolQC','GarageYrBlt','GarageArea','GarageCars','BsmtFinSF1','BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','BsmtFullBath','BsmtHalfBath','MasVnrArea'):
+    test[col] = test[col].fillna(0)
+test["LotFrontage"] = test.groupby("Neighborhood")["LotFrontage"].transform(
+    lambda x: x.fillna(x.median()))
+for col in ('MSZoning','Electrical','KitchenQual','Exterior1st','Exterior2nd','SaleType'):
+    test[col] = test[col].fillna(test[col].mode()[0])
+test["Functional"] = test["Functional"].fillna("Typ")
+test['YrSold'] = test['YrSold'].astype(str)
+test['MoSold'] = test['MoSold'].astype(str)
+
+test = test.replace({'FireplaceQu': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'BsmtQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'BsmtCond': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'GarageQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'GarageCond': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'ExterQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'ExterCond': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'HeatingQC': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'PoolQC': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'PavedDrive': {'Y': 2, 'P': 1, 'N': 0}, \
+                 'KitchenQual': {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}, \
+                 'BsmtFinType1': {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3, 'LwQ': 2, 'Unf': 1, 'None': 0}, \
+                 'BsmtFinType2': {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3, 'LwQ': 2, 'Unf': 1, 'None': 0}, \
+                 'Functional': {'Sel': 6, 'Sev': 5, 'Maj2': 4, 'Maj1': 3, 'Mod': 2, 'Min1': 1, 'Min2': 1, 'Typ': 0}, \
+                 'BsmtExposure': {'Gd': 3, 'Av': 2, 'Mn': 1, 'No': 0, 'None': 0}, \
+                 'Fence': {'GdPrv': 2, 'GdWo': 2, 'MnPrv': 1, 'MnWw': 1, 'None': 0}, \
+                 'GarageFinish': {'Fin': 3, 'Unf': 2, 'RFn': 1, 'None': 0}, \
+                 'LandSlope': {'Gtl': 2, 'Mod': 1, 'Sev': 0}, \
+                 'LotShape': {'Reg': 3, 'IR1': 2, 'IR2': 1, 'IR3': 0}, \
+                
+                 'Street': {'Pave': 1, 'Grvl': 0}, \
+                 'Alley': {'Pave': 2, 'Grvl': 1, 'None': 0} })
+#더미를 같이 하기 위해 train과 test concat
+
+
+#dummies
+train=pd.get_dummies(train)
+test=pd.get_dummies(test)
+
+train=train.drop(list(set(train)-set(test)),axis=1)
+
+
+#split
+x_train, x_test, y_train, y_test = train_test_split(train, target, random_state=42)
+
+param_grid = {
+    'max_depth':[3,4,5],
+    'min_child_weight':[1,3,5],
+    'gamma':[0,0.2,0.4],
+    'subsample':[0.5,0.7,0.9],
+    'colsample_bytree':[0.5,0.7,0.9],
+    'reg_alpha':[0.01,0.1,1,10,100]
+}
+
+
+optimal_params = GridSearchCV(
+    estimator=xgb.XGBRegressor(learning_rate=1000,
+                                n_estimators=1000,
+                                objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                                thread=-1,
+                                scoring ='rmse',
+                                use_label_encoder=False
+                                ),
+        param_grid=param_grid,
+        n_jobs=-1,
+        iid=False,
+        cv=5,
+        verbose=10
+)
+
+
+optimal_params.fit(x_train, 
+                   y_train, 
+                   early_stopping_rounds=10,                
+                   eval_metric='rmse',
+                   eval_set=[(x_test, y_test)],
+                   verbose=False)
+print(optimal_params.best_params_)
+
+
+# Evaluate Optimized Model
+reg_xgb = xgb.XGBRegressor(learning_rate=0.01,
+                            n_estimators=10,
+                            objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                            scoring ='rmse',
+                            thread=-1,
+                            use_label_encoder=False,
+                            random_state=50,
+                            max_depth=optimal_params.best_params_['max_depth'],
+                            min_child_weight=optimal_params.best_params_['min_child_weight'],
+                            gamma=optimal_params.best_params_['gamma'],
+                            subsample=optimal_params.best_params_['subsample'],
+                            colsample_bytree=optimal_params.best_params_['colsample_bytree'],
+                            reg_alpha=optimal_params.best_params_['reg_alpha']
+                            )
+
+
+
+
+
+
+reg_xgb.fit(x_train, 
+            y_train, 
+            verbose=True, 
+            early_stopping_rounds=10,
+            eval_metric='rmse',
+            eval_set=[(x_test, y_test)])
+
+
+reg_xgb.feature_importances_
+imtc=np.where(reg_xgb.feature_importances_!=0)[0]
+
+x_train = x_train.iloc[:,imtc]
+x_test = x_test.iloc[:,imtc]
+test = test.iloc[:,imtc]
+
+
+
+
+param_grid = {
+    'max_depth':[3,4,5],
+    'min_child_weight':[1,3,5],
+    'gamma':[0,0.2,0.4],
+    'subsample':[0.5,0.7,0.9],
+    'colsample_bytree':[0.5,0.7,0.9],
+    'reg_alpha':[0.01,0.1,1,10,100]
+}
+
+
+optimal_params = GridSearchCV(
+    estimator=xgb.XGBRegressor(learning_rate=1000,
+                                n_estimators=1000,
+                                objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                                thread=-1,
+                                scoring ='rmse',
+                                use_label_encoder=False
+                                ),
+        param_grid=param_grid,
+        n_jobs=-1,
+        iid=False,
+        cv=5,
+        verbose=10
+)
+
+
+optimal_params.fit(x_train, 
+                   y_train, 
+                   early_stopping_rounds=10,                
+                   eval_metric='rmse',
+                   eval_set=[(x_test, y_test)],
+                   verbose=False)
+print(optimal_params.best_params_)
+
+
+# Evaluate Optimized Model
+reg_xgb = xgb.XGBRegressor(learning_rate=0.01,
+                            n_estimators=10,
+                            objective='reg:squarederror',   # 다중분류 multi:softmax   다중확률 multi-softprob
+                            scoring ='rmse',
+                            thread=-1,
+                            use_label_encoder=False,
+                            random_state=50,
+                            max_depth=optimal_params.best_params_['max_depth'],
+                            min_child_weight=optimal_params.best_params_['min_child_weight'],
+                            gamma=optimal_params.best_params_['gamma'],
+                            subsample=optimal_params.best_params_['subsample'],
+                            colsample_bytree=optimal_params.best_params_['colsample_bytree'],
+                            reg_alpha=optimal_params.best_params_['reg_alpha']
+                            )
+
+reg_xgb.fit(x_train, 
+                   y_train, 
+                   early_stopping_rounds=10,                
+                   eval_metric='rmse',
+                   eval_set=[(x_test, y_test)],
+                   verbose=False)
+preds = reg_xgb.predict(test)
+preds
+
+
+submit = pd.read_csv('C:\\Users\\User\\Downloads\\sample_submission.csv',encoding='cp949')
+submit['SalePrice']=preds
+submit.to_csv('C:\\Users\\User\\Downloads\\house_result.csv',encoding='cp949',index=False)
+
+
+```
