@@ -1,0 +1,174 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jun 13 13:40:31 2021
+
+@author: meuch
+"""
+
+import pandas as pd
+import numpy as np
+import xgboost as xgb
+from sklearn.model_selection import train_test_split, GridSearchCV
+from scipy.stats import skew
+from sklearn.preprocessing import MinMaxScaler
+
+
+pd.set_option('display.max_columns',500)
+pd.set_option('display.max_rows',2000)
+
+# 데이터 로드
+train_x_raw = pd.read_csv('D:\\000_빅데이터분석기사/유형2/binary/X_train.csv',encoding='cp949')
+train_y_raw = pd.read_csv('D:\\000_빅데이터분석기사/유형2/binary/Y_train.csv',encoding='cp949')
+test_x_raw = pd.read_csv('D:\\000_빅데이터분석기사/유형2/binary/X_test.csv',encoding='cp949')
+
+train_x = train_x_raw.copy()
+train_y = train_y_raw.copy()
+test_x = test_x_raw.copy()
+
+
+del train_x['cust_id']
+del train_y['cust_id']
+del test_x['cust_id']
+
+
+# 데이터 탐색
+print(train_x)
+print(train_y)
+print(test_x)
+
+print(train_x.info())
+print(train_y.info())
+print(test_x.info())
+
+# 결측치 탐색
+print(train_x.isnull().sum(),'\n')
+print(train_y.isnull().sum(),'\n')
+print(test_x.isnull().sum(),'\n')
+
+## 결측치 0으로 치환
+train_x=train_x.fillna(0)
+test_x=test_x.fillna(0)
+
+skew_train_x = train_x.drop(['주구매상품','주구매지점'],axis=1)
+# 왜도 파악
+for i in skew_train_x.columns:
+    if i!='주구매상품' or i!='주구매지점':
+        print(i,skew(skew_train_x[i]))
+
+
+# ## 왜도가 큰 열들은 log 취해서 새로 넣어주기
+# for i in ['총구매액','최대구매액','환불금액']:
+#     train_x[i]=np.log1p(train_x[i]).replace([np.inf,-np.inf],0)
+#     test_x[i]=np.log1p(test_x[i]).replace([np.inf,-np.inf],0)
+
+
+# train_x['총구매액'].isnull().sum()
+
+
+# np.where(train_x['총구매액'].isnull()==True)
+# np.where(train_x['최대구매액'].isnull()==True)
+
+# train_x=train_x.drop(train_x.index[[1659,3174,3488]])
+# train_y=train_y.drop(train_x.index[[1659,3174,3488]])
+
+
+
+# ## nan 인거 drop
+# train_x=train_x.dropna()
+# test_x=test_x.dropna()
+
+
+
+print('#####################################')
+# 왜도 파악
+for i in skew_train_x.columns:
+    if i!='주구매상품' or i!='주구매지점':
+        
+        print(i,skew(train_x[i]))
+
+
+
+
+# # 더미화
+train_x = pd.get_dummies(train_x,['주구매상품','주구매지점'])
+test_x = pd.get_dummies(test_x,['주구매상품','주구매지점'])
+
+print(list(set(train_x)-set(test_x)))
+
+
+del train_x['주구매상품_소형가전']
+
+
+print(len(train_x.columns))
+print(len(test_x.columns))
+
+
+
+
+
+# ########################################################
+
+x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,random_state=1)
+
+param_grid={
+    'max_depth':[3,4,5,6],
+    'min_child_weight':[1,3,5],
+    'gamma':[0,0.2,0.4],
+    'subsample':[0.5,0.7,0.9]
+
+    }
+
+optimal_params = GridSearchCV(
+    estimator = xgb.XGBClassifier(
+                    objective='binary:logistic',
+                    use_label_encoder=False       
+                ),
+    param_grid=param_grid,
+    n_jobs=-1,
+    iid=False,
+    cv=5,
+    verbose=10
+    )
+
+optimal_params.fit(x_train,y_train,early_stopping_rounds=10,eval_metric='auc',eval_set=[(x_test,y_test)],verbose=False)
+print(optimal_params.best_params_)
+
+clf_xgb = xgb.XGBClassifier(
+
+        objective='binary:logistic',
+        scoring='roc_auc',
+        use_label_encoder=False,
+        max_depth=3,
+        gamma=0,
+        min_child_weight=5,
+        subsample=0.9
+    
+    )
+
+                    
+
+clf_xgb.fit(x_train, 
+            y_train, 
+            verbose=True, 
+            early_stopping_rounds=10,
+            eval_metric='auc',
+            eval_set=[(x_test, y_test)])
+
+
+preds=clf_xgb.predict(test_x)
+prob=clf_xgb.predict_proba(test_x)
+
+
+preds = clf_xgb.predict(x_test)
+accuracy = (preds.flatten() == np.array(y_test).flatten()).sum().astype(float) / len(preds)*100
+accuracy
+
+
+
+
+
+
+
+print(prob)
+sum(list(list(zip(*prob))[1]))
+len(prob)
