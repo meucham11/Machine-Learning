@@ -1,3 +1,5 @@
+```python3
+
 # 출력을 원하실 경우 print() 활용
 # 예) print(df.head())
 
@@ -11,18 +13,15 @@ from scipy.stats import skew
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler
 import xgboost as xgb
-
+import warnings
+warnings.filterwarnings(action='ignore') 
 
 pd.set_option('display.max_columns',100)
 
 
-train_x_raw = pd.read_csv('D:\\jupyter lab\빅분기\\작업2유형/X_train.csv',encoding='cp949')
-train_y_raw = pd.read_csv('D:\\jupyter lab\빅분기\\작업2유형/Y_train.csv',encoding='cp949')
-test_x_raw = pd.read_csv('D:\\jupyter lab\빅분기\\작업2유형/X_test.csv',encoding='cp949')
-
-train_x = train_x_raw.copy()
-train_y = train_y_raw.copy()
-test_x = test_x_raw.copy()
+train_x = pd.read_csv('data/X_train.csv')
+train_y = pd.read_csv('data/y_train.csv')
+test_x = pd.read_csv('data/X_test.csv')
 
 del train_x['cust_id']
 del train_y['cust_id']
@@ -84,10 +83,10 @@ del train_x['주구매상품_소형가전']
 x_train,x_test,y_train,y_test = train_test_split(train_x,train_y)
 
 param_grid={
-	'max_depth':[3,4,5]
-	#'min_child_weight':[1,3,5]
-    #'gamma':[0,0.2,0.4]
-    #'subsample':[0.5,0.7,0.9]
+	'max_depth':[3],                   
+	'min_child_weight':[3],           #
+  'gamma':[0.395],                #
+  'subsample':[0.85,0.87,0.9]          #
 }
 
 op_params = GridSearchCV(
@@ -108,15 +107,15 @@ op_params.fit(
 	eval_set=[(x_test,y_test)]
 )
 
+print(op_params.best_params_)
+
+
+
 
 clf_xgb = xgb.XGBClassifier(
         objective='binary:logistic',
-        scoring='roc_auc',
         use_label_encoder=False,
         max_depth=op_params.best_params_['max_depth']
-        
-        
-    
     )
 
                     
@@ -139,3 +138,4 @@ result = pd.DataFrame({'custid':result_cust_id,
 
 
 
+```
