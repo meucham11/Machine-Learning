@@ -1,0 +1,140 @@
+# 출력을 원하실 경우 print() 활용
+# 예) print(df.head())
+
+# 답안 제출 예시
+# 수험번호.csv 생성
+# DataFrame.to_csv("0000.csv", index=False)
+
+import pandas as pd
+import numpy as np
+from scipy.stats import skew
+from sklearn.model_selection import train_test_split, GridSearchCV
+import xgboost as xgb
+
+pd.set_option('display.max_columns',100)
+
+
+train_x_raw = pd.read_csv('D:\\jupyter lab\빅분기\\작업2유형/X_train.csv',encoding='cp949')
+train_y_raw = pd.read_csv('D:\\jupyter lab\빅분기\\작업2유형/Y_train.csv',encoding='cp949')
+test_x_raw = pd.read_csv('D:\\jupyter lab\빅분기\\작업2유형/X_test.csv',encoding='cp949')
+
+train_x = train_x_raw.copy()
+train_y = train_y_raw.copy()
+test_x = test_x_raw.copy()
+
+del train_x['cust_id']
+del train_y['cust_id']
+result_cust_id=test_x['cust_id']
+del test_x['cust_id']
+# 결측치 확인 train = 환불금액, test도
+print('train_x결측치:',train_x.isnull().sum())
+print('test_x결측치:',test_x.isnull().sum())
+
+train_x=train_x.fillna(0)
+test_x=test_x.fillna(0)
+
+# 왜도
+skew_col=train_x.drop(['주구매상품','주구매지점'],axis=1).columns
+for i in skew_col:
+	print('train_x skew ',i, skew(train_x[i]))
+	print('test_x skew ',i, skew(train_x[i]))
+### 총구매액, 최대구매액, 환불금액 log1p 변환
+
+## 마이너스 체크  총구매액 최대구매액 0이하 존재
+for i in skew_col:
+	print('train_x 0 ',i, sum(train_x[i]<0))
+	print('test_x 0 ',i, sum(test_x[i]<0))
+
+train_x_총구underzero = np.where(train_x['총구매액']<0)[0].tolist()
+train_x_최구underzero = np.where(train_x['총구매액']<0)[0].tolist()
+train_x지울index=set(train_x_총구underzero+train_x_최구underzero)
+
+
+test_x_총구underzero = np.where(test_x['총구매액']<0)[0].tolist()
+test_x_최구underzero = np.where(test_x['총구매액']<0)[0].tolist()
+test_x지울index=set(test_x_총구underzero+test_x_최구underzero)
+
+
+train_x=train_x.drop(train_x지울index)
+train_y=train_y.drop(train_x지울index)
+test_x=test_x.drop(test_x지울index)
+
+print('\n\n')
+print(train_x.shape)
+print(test_x.shape)
+
+print('\n\n')
+for i in skew_col:
+	print('train_x 0 ',i, sum(train_x[i]<0))
+	print('test_x 0 ',i, sum(test_x[i]<0))
+
+### 로그변환
+for i in ['총구매액', '최대구매액', '환불금액']:
+	train_x[i]=np.log1p(train_x[i])
+	test_x[i]=np.log1p(test_x[i])
+
+# 더미화
+train_x=pd.get_dummies(train_x,['주구매상품','주구매지역'])
+test_x=pd.get_dummies(test_x,['주구매상품','주구매지역'])	
+
+print('\n\n')
+print(list(set(train_x)-set(test_x)))
+
+del train_x['주구매상품_소형가전']
+
+
+########################################################
+x_train,x_test,y_train,y_test = train_test_split(train_x,train_y)
+
+param_grid={
+	'max_depth':[3,4,5]
+	
+}
+
+op_params = GridSearchCV(
+	estimator=xgb.XGBClassifier(
+		objective='binary:logistic',
+		use_label_encoder=False
+	),
+	param_grid=param_grid,
+	n_jobs=-1,
+	cv=5,
+	verbose=10
+)
+
+op_params.fit(
+	train_x,train_y,
+	early_stopping_rounds=10,
+	eval_metric='auc',
+	eval_set=[(x_test,y_test)]
+)
+
+
+clf_xgb = xgb.XGBClassifier(
+        objective='binary:logistic',
+        scoring='roc_auc',
+        use_label_encoder=False,
+        max_depth=op_params.best_params_['max_depth']
+        
+        
+    
+    )
+
+                    
+
+clf_xgb.fit(x_train, 
+            y_train, 
+            verbose=True, 
+            early_stopping_rounds=10,
+            eval_metric='auc',
+            eval_set=[(x_test, y_test)])
+
+
+result = pd.DataFrame({'custid':result_cust_id,
+											'gender':clf_xgb.predict_proba(test_x)})
+
+
+
+
+
+
